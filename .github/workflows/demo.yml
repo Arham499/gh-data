@@ -3,9 +3,10 @@ on:
   push:
     branches:
       - main
+
 jobs:
   test:
-    runs-on: ubuntu-latestß
+    runs-on: ubuntu-latest
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -13,18 +14,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: deps-node-modules-${{ hashFiles('**/package-lock.json')}}
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
         run: npm ci
       - name: Lint code
         run: npm run lint
       - name: Test code
         run: npm run test
+
   build:
-    needs: test  
+    needs: test
     runs-on: ubuntu-latest
     outputs:
-      scripts-file: ${{ steps.publish.outputs.script-file}}
+      scripts-file: ${{ steps.publish.outputs.script-file }}
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -32,23 +34,22 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: deps-node-modules-${{ hashFiles('**/package-lock.json')}}
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
         run: npm ci
       - name: Build website
         run: npm run build
       - name: Publish JS filename
         id: publish
-        run : find dist/assets -type f -name "*.js" -execdir echo 'script-file={}' >> $GITHUB_OUTPUT ';'
+        run: |
+          echo "script-file=$(find dist/assets -type f -name '*.js' | head -n 1)" >> $GITHUB_OUTPUT
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-files
           path: dist
-            # dist
-            # package.json
 
-  deploy:  
+  deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -59,6 +60,6 @@ jobs:
       - name: Output contents
         run: ls
       - name: Output filename
-        run : echo "${{needs.build.outputs.scripts-file}}"
+        run: echo "${{ needs.build.outputs.scripts-file }}"
       - name: Deploy
         run: echo "Deploying..."
